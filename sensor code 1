@@ -1,0 +1,118 @@
+Paul Matthew Martinez <paulmatthewmartinez@yahoo.com>
+To:
+paulmatthewmartinez@yahoo.com
+
+Oct 28, 2015 at 5:52 PM
+
+/////////////////////////////
+//VARS
+//the time we give the sensor to calibrate (10-60 secs according to the datasheet)
+int calibrationTime = 30;       
+//the time when the sensor outputs a low impulse
+long unsigned int lowIn;        
+//the amount of milliseconds the sensor has to be low 
+//before we assume all motion has stopped
+long unsigned int pause = 5000; 
+boolean lockLow = true;
+boolean takeLowTime; 
+int pirPin = 3;    //the digital pin connected to the PIR sensor's output
+int ledPin = 13;
+#include <Servo.h>
+Servo Motor;    //Body Motor
+Servo Motor2; //Breathing motor
+//Speeds for body motor
+const int MF = 53;  // angle that moves motor forward 60HIGH 80SLOW
+const int MB = 130; // angle that moves motor backward 120
+const int MS = 91; // angle that stops the motor 91
+//Speeds for 2nd Body Motor  
+const int MF1 = 70;
+const int MB1 = 120;
+const int MS1 = 91;
+
+/////////////////////////////
+//SETUP
+void setup(){
+   Motor.attach(11);
+   Motor2.attach(10); //Put motor pin here 
+   
+  Serial.begin(9600);
+  pinMode(pirPin, INPUT);
+  pinMode(ledPin, OUTPUT);
+  digitalWrite(pirPin, LOW);
+  //give the sensor some time to calibrate
+  Serial.print("calibrating sensor ");
+    for(int i = 0; i < calibrationTime; i++){
+      Serial.print(".");
+      delay(1000);
+      }
+    Serial.println(" done");
+    Serial.println("SENSOR ACTIVE");
+    delay(50);
+  }
+////////////////////////////
+//LOOP
+void loop(){
+  digitalWrite(ledPin, HIGH);
+ Motor.write(MF1); //Breathing movement
+     if(digitalRead(pirPin) == HIGH){
+     
+ //Body movement      
+  Motor2.write(MF); // move forward
+  delay(600);     //200
+ 
+  Motor2.write(MS); // stop motor
+  delay(1);  //30 gabe's input (1)
+ 
+  Motor2.write(MB); // move backward
+  delay(600);  //200
+ 
+  Motor2.write(MS); // stop motor
+  delay(1);  //30  gabe's input (1)
+  Motor2.write(MF); // move forward
+  delay(400);     //200
+ 
+  Motor2.write(MS); // stop motor
+  delay(1);  //30 gabe's input (1)
+ 
+  Motor2.write(MB); // move backward
+  delay(300);  //200
+ 
+  Motor2.write(MS); // stop motor
+  delay(1);  //30  gabe's input (1)
+ 
+
+       digitalWrite(ledPin, HIGH);   //the led visualizes the sensors output pin state
+       if(lockLow){  
+         //makes sure we wait for a transition to LOW before any further output is made:
+         lockLow = false;            
+         Serial.println("---");
+         Serial.print("motion detected at ");
+         Serial.print(millis()/1000);
+         Serial.println(" sec"); 
+         delay(50); //used to be 50 
+         }         
+         takeLowTime = true;
+       }
+     if(digitalRead(pirPin) == LOW){       
+  //     digitalWrite(ledPin, LOW);  //the led visualizes the sensors output pin state
+       if(takeLowTime){
+        lowIn = millis();          //save the time of the transition from high to LOW
+        takeLowTime = false;       //make sure this is only done at the start of a LOW phase
+        }
+       //if the sensor is low for more than the given pause, 
+       //we assume that no more motion is going to happen
+       if(!lockLow && millis() - lowIn > pause){  
+           //makes sure this block of code is only executed again after 
+           //a new motion sequence has been detected
+           lockLow = true;                        
+           Serial.print("motion ended at ");      //output
+           Serial.print((millis() - pause)/1000);
+           Serial.println(" sec");
+           delay(50);
+           }
+       }
+  }
+
+
+
+
