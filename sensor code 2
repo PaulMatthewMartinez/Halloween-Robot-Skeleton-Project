@@ -1,0 +1,13 @@
+/*const int MF1 = 50;
+const int MB1 = 120;
+const int MS1 = 91;
+#include <Servo.h>
+Servo Motor;    //Body Motor
+void setup() {
+  // put your setup code here, to run once:
+   Motor.attach(11);
+}
+void loop() {
+  // put your main code here, to run repeatedly:
+ Motor.write(MF1); //Breathing movement
+}
